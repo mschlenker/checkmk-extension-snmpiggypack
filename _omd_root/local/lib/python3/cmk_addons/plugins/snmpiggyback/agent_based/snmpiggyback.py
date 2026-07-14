@@ -2,6 +2,7 @@
 
 import re
 import os
+import json
 from cmk.agent_based.v2 import AgentSection, CheckPlugin, Service, Result, State, Metric, check_levels
 
 def parse_snmpiggyback(string_table):
@@ -22,8 +23,19 @@ def parse_snmpiggyback(string_table):
             linebuffer.append(line.strip())
     parsed[hostname] = linebuffer
     return parsed
+    
+def parse_snmpiggyback_hoststats(string_table):
+    j = ""
+    for l in string_table:
+        for t in l:
+            j = j + " " + t
+    parsed = json.loads(j)
+    return parsed
 
 def discover_snmpiggyback(section):
+    yield Service()
+    
+def discover_snmpiggyback_hoststats(section):
     yield Service()
 
 def check_snmpiggyback(section):
@@ -35,10 +47,20 @@ def check_snmpiggyback(section):
                 f.write(oid)
                 f.write("\n")
     yield Result(state=State.OK, summary="Everything is fine")
+    
+def check_snmpiggyback_hoststats(section):
+    slices = section["slices"]
+    duration = section["duration"]
+    yield Result(state=State.OK, summary=f"Informational only, acquired {slices} slices in {duration} seconds.")
 
 agent_section_snmpiggyback = AgentSection(
     name = "snmpiggyback_data",
     parse_function = parse_snmpiggyback,
+)
+
+agent_section_snmpiggyback_hoststats = AgentSection(
+    name = "snmpiggyback_host_stats",
+    parse_function = parse_snmpiggyback_hoststats,
 )
 
 check_plugin_snmpiggyback = CheckPlugin(
@@ -47,4 +69,12 @@ check_plugin_snmpiggyback = CheckPlugin(
     sections = [ "snmpiggyback_data" ],
     discovery_function = discover_snmpiggyback,
     check_function = check_snmpiggyback,
+)
+
+check_plugin_snmpiggyback_hoststats = CheckPlugin(
+    name = "snmpiggyback_hoststats",
+    service_name = "SNMPiggyback host statistics",
+    sections = [ "snmpiggyback_host_stats" ],
+    discovery_function = discover_snmpiggyback_hoststats,
+    check_function = check_snmpiggyback_hoststats,
 )
