@@ -11,7 +11,7 @@
 #        { 
 #            "name" : "hp-mattias",
 #            "command_template" : "snmpget -t 10  -O nQet -c public -v 1 10.76.23.248",
-#            "slicesize" : 30,
+#            "slicesize" : 50,
 #            "samplewalk" : "/tmp/hp_mattias.snmp"
 #        }
 #    ]
@@ -34,6 +34,7 @@ import json
 import sys
 import subprocess
 import re
+from datetime import datetime, timedelta
 
 def get_cfgfile():
     parser = argparse.ArgumentParser("snmpiggyback")
@@ -77,11 +78,14 @@ def walk_slice(cfg, oidlist):
     sp = subprocess.run(command, shell=True, text=True, capture_output=True)
     for l in sp.stdout.splitlines():
         line = re.sub(r"\s=\s", " ", l)
-        #line = re.sub(r"\s\"", " ", line)
-        #line = re.sub(r"\"$", "", line)
         print(line)
 
 def walk_host(cfg):
+    tstart = datetime.now()
+    stats = { 
+        "slices" : 0,
+        "duration" : 0.0
+    }
     # sys.stdout.flush()
     print("[[[[" + cfg["name"] + "]]]]")
     oidlist = []
@@ -89,18 +93,32 @@ def walk_host(cfg):
         for line in fh:
             oidlist.append(line.split()[0])
             if len(oidlist) % cfg["slicesize"] == 0:
+                # FIXME! Retrieve statistics (lines processed and errors) here!
                 walk_slice(cfg, oidlist)
                 oidlist = []
-    walk_slice(cfg, oidlist)
+                stats["slices"] += 1
+    if len(oidlist) > 0:
+        # FIXME! Retrieve statistics (lines processed and errors) here!
+        walk_slice(cfg, oidlist)
+        stats["slices"] += 1
+    tend = datetime.now()
+    stats["duration"] = (tend - tstart).total_seconds()
+    return stats
         
 def walk_allhosts(cfg):
     print("<<<snmpiggyback_data:sep(0)>>>")
     # sys.stdout.flush()
+    stats = {}
     for h in cfg["hosts"]:
-        walk_host(h)
+        stats[h["name"]] = walk_host(h)
     output = { "success" : "Successfully created SNMPiggyback data." }
     print("<<<snmpiggyback_stats:sep(0)>>>")
     print(json.dumps(output))
+    for h in stats:
+        print("<<<<" + h + ">>>>")
+        print("<<<snmpiggyback_host_stats:sep(0)>>>")
+        print(json.dumps(stats[h]))
+        print("<<<<>>>>")
 
 config = get_config()
 walk_allhosts(config)
