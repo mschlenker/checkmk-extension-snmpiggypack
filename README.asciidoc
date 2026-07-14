@@ -1,0 +1,26 @@
+
+= SNMPiggyback--hacky approach to transfer SNMP data over a piggyback like mechanism
+
+_Mathias Kettner would be proud of me_.
+So: be aware of the implications of this Checkmk extension.
+Use it wisely and do not overstretch it's abilities.
+
+== Problems in need for solution
+
+=== The problem
+
+Since I am the person at Checkmk hanging around at Open Source events, I am also the person doing OSS dogfooding.
+To monitor my own infrastructure, I use Checkmk Community.
+Hosts in firewalled networks just _rsync_ the agent output to the Checkmk server.
+There a simple datasource command picks it up.
+This works for normal agent output and I have hacked a few special agents to work with this mechanism as well.
+
+However, it does not work with SNMP.
+And I want to be informed about supplies of my printer.
+
+=== The hack
+
+The hack is rolling out an agent plug-in that runs `snmpget` to retrieve the OIDs required and to transfer them over a piggyback like mechanism.
+On the Checkmk server, a check plug-in dumps the OIDs to a folder that was initially meant to be used for developing/debugging.
+There, SNMP hosts that use the rule _Simulating SNMP by using a stored SNMP walk_ can be monitored using the SNMPiggyback data.
+
