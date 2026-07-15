@@ -20,9 +20,9 @@ And I want to be informed about supplies of my printer.
 
 === The hack
 
-The hack is rolling out an agent plug-in that runs `snmpget` to retrieve the OIDs required and to transfer them over a piggyback like mechanism.
+The hack is rolling out an agent plug-in that runs `snmpget` to retrieve the OIDs required and to transfer them over a link:https://docs.checkmk.com/latest/en/piggyback.html[piggyback^] like mechanism.
 On the Checkmk server, a check plug-in dumps the OIDs to a folder that was initially meant to be used for developing/debugging.
-There, SNMP hosts that use the rule _Simulating SNMP by using a stored SNMP walk_ can be monitored using the SNMPiggyback data.
+There, SNMP hosts that use the rule _Simulating SNMP by using a stored SNMP walk_ can be link:https://docs.checkmk.com/latest/en/snmp.html#simulation[monitored using the SNMPiggyback data].
 
 === The WARNING
 
@@ -30,6 +30,8 @@ This hack uses an internal mechanism that is aimed at testing SNMP output, devel
 It was never meant to be used in general monitoring.
 So absolutely no performance evaluation was ever done for this.
 You'll probably have zero problems monitoring a few devices with limited feature sets this way, but will run into serious performance issues when going bigger.
+
+Doing this was never endorsed by my employer, Checkmk GmbH.
 
 == How to use it
 
