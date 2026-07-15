@@ -24,3 +24,65 @@ The hack is rolling out an agent plug-in that runs `snmpget` to retrieve the OID
 On the Checkmk server, a check plug-in dumps the OIDs to a folder that was initially meant to be used for developing/debugging.
 There, SNMP hosts that use the rule _Simulating SNMP by using a stored SNMP walk_ can be monitored using the SNMPiggyback data.
 
+=== The WARNING
+
+This hack uses an internal mechanism that is aimed at testing SNMP output, developing plug-ins and help supporters debug problems.
+It was never meant to be used in general monitoring.
+So absolutely no performance evaluation was ever done for this.
+You'll probably have zero problems monitoring a few devices with limited feature sets this way, but will run into serious performance issues when going bigger.
+
+== How to use it
+
+Using this hack needs a bit more of preparation than just running a service discovery on a host.
+In Checkmk the service discovery basically creates a list of OIDs that have to be queried.
+When the check itself is performed, only those OIDs get queried which has a positive impact on performance.
+
+=== Prepare a walk and generate a config
+
+Luckily, especially for smaller devices like networked printers or office switches, only a few hundred up to a few thousand OIDs are available and should be queried in a few seconds (assuming the right batch size).
+So, to cut short, just use a full walk as template.
+The easiest way to do so is to fire up a Checkmk site in the network where the SNMP device is located and configure it.
+This not just allows you to pull the walk, it also allows you to get a glimpse on the discovered services.
+
+Store the walk in a convenient location on the machine that will run the `snmpiggyback.py` agent plug-in, for example in `/etc/checkmk`.
+There also create a config file `/etc/checkmk/snmpiggyback.json`:
+
+[source,json]
+----
+{
+    "hosts": [
+        { 
+            "name" : "hp-mattias",
+            "command_template" : "snmpget -t 10  -O nQet -c public -v 1 10.76.23.248",
+            "slicesize" : 50,
+            "samplewalk" : "/tmp/snmpwalk-hp-mattias.txt"
+        }
+    ]
+}
+----
+
+Play around with the slice size (how many OIDs to query with one command).
+Small slice sizes mean many invocations, too large sizes will stress your device.
+Typical slice sizes are between 10 and 100.
+
+[source]
+----
+time python3 snmpiggyback.py --config /etc/check_mk/snmpiggyback.json > /tmp/snmpiggy.txt
+----
+
+When you find a sweet spot for the slice size, deploy the plugin.
+
+=== Configure the piggyback source host
+
+Run a service discovery on the host that transports the SNMPiggyback data.
+This will discover a service _SNMPiggyback_.
+This actually dumps the SNMP data that will then be picked up for monitoring the SNMP hosts.
+After the next check cycle, check your sites `var/check_mk/snmpwalks/` for new files.
+As soon something appears here, you can add your SNMP hosts.
+
+=== Configure the piggybacked SNMP hosts
+
+The hosts that are receiving SNMPiggyback data should be configured to _No agent, no API integrations_ and _SNMP v1_.
+Also configure _Always expect and use piggyback data_ for a service providing statistics.
+Additionally, add the rule _Simulating SNMP by using a stored SNMP walk_.
+After a service discovery, you should see the services as seen when directly monitoring the device plus _SNMPiggyback host statistics_.
