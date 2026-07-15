@@ -12,7 +12,7 @@
 #            "name" : "hp-mattias",
 #            "command_template" : "snmpget -t 10  -O nQet -c public -v 1 10.76.23.248",
 #            "slicesize" : 50,
-#            "samplewalk" : "/tmp/hp_mattias.snmp"
+#            "samplewalk" : "/tmp/snmpwalk-hp-mattias.txt"
 #        }
 #    ]
 # }
@@ -84,7 +84,8 @@ def walk_host(cfg):
     tstart = datetime.now()
     stats = { 
         "slices" : 0,
-        "duration" : 0.0
+        "duration" : 0.0,
+        "slicesize" : cfg["slicesize"]
     }
     # sys.stdout.flush()
     print("[[[[" + cfg["name"] + "]]]]")

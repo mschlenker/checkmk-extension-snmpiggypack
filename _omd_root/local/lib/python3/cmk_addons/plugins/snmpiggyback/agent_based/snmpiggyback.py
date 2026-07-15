@@ -51,7 +51,9 @@ def check_snmpiggyback(section):
 def check_snmpiggyback_hoststats(section):
     slices = section["slices"]
     duration = section["duration"]
-    yield Result(state=State.OK, summary=f"Informational only, acquired {slices} slices in {duration} seconds.")
+    size = section["slicesize"]
+    yield Metric(name="elapsed_time", value=duration)
+    yield Result(state=State.OK, summary=f"Informational only, acquired {slices} slices (max. {size} each) in {duration} seconds.")
 
 agent_section_snmpiggyback = AgentSection(
     name = "snmpiggyback_data",
