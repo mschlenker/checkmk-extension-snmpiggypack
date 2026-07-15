@@ -5,7 +5,7 @@
            'cmk_addons_plugins': ['snmpiggyback/agent_based/snmpiggyback.py']},
  'name': 'snmpiggyback',
  'title': 'SNMPiggyback',
- 'version': '0.1.0',
+ 'version': '0.1.1',
  'version.min_required': '2.3.0',
  'version.packaged': 'cmk-mkp-tool 3.0.0',
  'version.usable_until': '3.0.99'}
